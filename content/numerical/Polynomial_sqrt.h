@@ -4,6 +4,8 @@
  * Description:
  */
 
+#include "Polynomial.h"
+
 // if the poly is not zero but the result is zero, then no solution
 poly sqrt(int n) const {
   if ((*this)[0] == mint(0)) {
