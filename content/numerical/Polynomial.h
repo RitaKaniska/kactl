@@ -3,6 +3,9 @@
  * Date: 2023-11-30
  * Description:
  */
+
+#include "Polynomial.h"
+
 struct poly {
   vector<mint> a;
   inline void normalize() {
