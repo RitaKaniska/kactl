@@ -4,7 +4,7 @@
  * Description:
  */
 
-#include "Polynomial.h"
+#include "NumberTheoreticTransform.h"
 
 struct poly {
   vector<mint> a;
