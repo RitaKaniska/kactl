@@ -4,6 +4,10 @@
  * Description:
  */
 
+#include "Polynomial.h"
+#include "Polynomial_exp.h"
+#include "Polynomial_log.h"
+
 //better for small k, k < 100000
 poly pow(int k, int n) const { // p(x)^k mod x^n
   if(is_zero()) return *this;
