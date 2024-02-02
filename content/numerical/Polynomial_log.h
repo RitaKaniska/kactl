@@ -1,4 +1,8 @@
-
+/**
+ * Author: ShahjalalShohag
+ * Date: 2023-11-30
+ * Description:
+ */
 
 #include "Polynomial.h"
 
