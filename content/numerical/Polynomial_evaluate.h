@@ -6,6 +6,14 @@
 
 #include "Polynomial.h"
 
+mint eval(mint x) { // evaluates in single point x
+  mint ans(0);
+  for(int i = size() - 1; i >= 0; i--) {
+    ans *= x;
+    ans += a[i];
+  }
+  return ans;
+}
 poly build(vector<poly> &ans, int v, int l, int r, vector<mint> &vec) { //builds evaluation tree for (x-a1)(x-a2)...(x-an)
   if(l == r) return ans[v] = poly({-vec[l], 1});
   int mid = l + r >> 1;
