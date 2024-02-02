@@ -1,3 +1,9 @@
+/**
+ * Author: ShahjalalShohag
+ * Date: 2023-11-30
+ * Description:
+ */
+
 //better for small k, k < 100000
 poly pow(int k, int n) const { // p(x)^k mod x^n
   if(is_zero()) return *this;
