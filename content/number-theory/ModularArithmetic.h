@@ -4,81 +4,56 @@
  * Description: Modulo template.
  */
 
-template<typename T>
-T bpow(T const& x, int64_t n) {
-    if(n == 0) {
-        return T(1);
-    } else {
-        auto t = bpow(x, n / 2);
-        t = t * t;
-        return n % 2 ? x * t : t;
+template <int32_t MOD>
+struct modint {
+  int32_t value;
+  modint() = default;
+  modint(int32_t value_) : value(value_) {}
+  inline modint<MOD> operator + (modint<MOD> other) const { int32_t c = this->value + other.value; return modint<MOD>(c >= MOD ? c - MOD : c); }
+  inline modint<MOD> operator - (modint<MOD> other) const { int32_t c = this->value - other.value; return modint<MOD>(c <    0 ? c + MOD : c); }
+  inline modint<MOD> operator * (modint<MOD> other) const { int32_t c = (int64_t)this->value * other.value % MOD; return modint<MOD>(c < 0 ? c + MOD : c); }
+  inline modint<MOD> & operator += (modint<MOD> other) { this->value += other.value; if (this->value >= MOD) this->value -= MOD; return *this; }
+  inline modint<MOD> & operator -= (modint<MOD> other) { this->value -= other.value; if (this->value <    0) this->value += MOD; return *this; }
+  inline modint<MOD> & operator *= (modint<MOD> other) { this->value = (int64_t)this->value * other.value % MOD; if (this->value < 0) this->value += MOD; return *this; }
+  inline modint<MOD> operator - () const { return modint<MOD>(this->value ? MOD - this->value : 0); }
+  modint<MOD> pow(uint64_t k) const {
+    modint<MOD> x = *this, y = 1;
+    for (; k; k >>= 1) {
+      if (k & 1) y *= x;
+      x *= x;
     }
-}
-
-template<int m>
-struct modular {
-    // https://en.wikipedia.org/wiki/Berlekamp-Rabin_algorithm
-    // solves x^2 = y (mod m) assuming m is prime in O(log m).
-    // returns nullopt if no sol.
-    optional<modular> sqrt() const {
-        static modular y;
-        y = *this;
-        if(r == 0) {
-            return 0;
-        } else if(bpow(y, (m - 1) / 2) != modular(1)) {
-            return nullopt;
-        } else {
-            while(true) {
-                modular z = rng();
-                if(z * z == *this) {
-                    return z;
-                }
-                struct lin {
-                    modular a, b;
-                    lin(modular a, modular b): a(a), b(b) {}
-                    lin(modular a): a(a), b(0) {}
-                    lin operator * (const lin& t) const {
-                        return {
-                            a * t.a + b * t.b * y,
-                            a * t.b + b * t.a
-                        };
-                    }
-                } x(z, 1); // z + x
-                x = bpow(x, (m - 1) / 2);
-                if(x.b != modular(0)) {
-                    return x.b.inv();
-                }
-            }
-        }
+    return y;
+  }
+  modint sqrt() const {
+    if (value == 0) return 0;
+    if (MOD == 2) return 1;
+    if (pow((MOD - 1) >> 1) == MOD - 1)  return 0; // does not exist, it should be -1, but kept as 0 for this program
+    unsigned int Q = MOD - 1, M = 0, i;
+    modint zQ; while (!(Q & 1)) Q >>= 1, M++;
+    for (int z = 1;; z++) {
+      if (modint(z).pow((MOD - 1) >> 1) == MOD - 1) {
+        zQ = modint(z).pow(Q); break;
+      }
     }
-    
-    int r;
-    constexpr modular(): r(0) {}
-    constexpr modular(int64_t rr): r(rr % m) {if(r < 0) r += m;}
-    modular inv() const {return bpow(*this, m - 2);}
-    modular operator - () const {return r ? m - r : 0;}
-    modular operator * (const modular &t) const {return (int64_t)r * t.r % m;}
-    modular operator / (const modular &t) const {return *this * t.inv();}
-    modular operator += (const modular &t) {r += t.r; r = min<unsigned>(r, r - m); return *this;}
-    modular operator -= (const modular &t) {r -= t.r; r = min<unsigned>(r, r + m); return *this;}
-    modular operator + (const modular &t) const {return modular(*this) += t;}
-    modular operator - (const modular &t) const {return modular(*this) -= t;}
-    modular operator *= (const modular &t) {return *this = *this * t;}
-    modular operator /= (const modular &t) {return *this = *this / t;}
-    
-    bool operator == (const modular &t) const {return r == t.r;}
-    bool operator != (const modular &t) const {return r != t.r;}
-    
-    explicit operator int() const {return r;}
-    int64_t rem() const {return 2 * r > m ? r - m : r;}
+    modint t = pow(Q), R = pow((Q + 1) >> 1), r;
+    while (true) {
+      if (t == 1) { r = R; break; }
+      for (i = 1; modint(t).pow(1 << i) != 1; i++);
+      modint b = modint(zQ).pow(1 << (M - 1 - i));
+      M = i, zQ = b * b, t = t * zQ, R = R * b;
+    }
+    return min(r, - r + MOD);
+  }
+  modint<MOD> inv() const { return pow(MOD - 2); }  // MOD must be a prime
+  inline modint<MOD> operator /  (modint<MOD> other) const { return *this *  other.inv(); }
+  inline modint<MOD> operator /= (modint<MOD> other)       { return *this *= other.inv(); }
+  inline bool operator == (modint<MOD> other) const { return value == other.value; }
+  inline bool operator != (modint<MOD> other) const { return value != other.value; }
+  inline bool operator < (modint<MOD> other) const { return value < other.value; }
+  inline bool operator > (modint<MOD> other) const { return value > other.value; }
 };
+template <int32_t MOD> modint<MOD> operator * (int64_t value, modint<MOD> n) { return modint<MOD>(value) * n; }
+template <int32_t MOD> modint<MOD> operator * (int32_t value, modint<MOD> n) { return modint<MOD>(value % MOD) * n; }
+template <int32_t MOD> ostream & operator << (ostream & out, modint<MOD> n) { return out << n.value; }
 
-template<int T>
-istream& operator >> (istream &in, modular<T> &x) {
-    return in >> x.r;
-}
-
-template<int T>
-ostream& operator << (ostream &out, modular<T> const& x) {
-    return out << x.r;
-}
+using mint = modint<mod>;
