@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: Given $n$ pair $(xi, yi)$, find smallest $p(x)$ such that $p(x_i) = y_i \forall i$. 
  */
 
 #include "Polynomial.h"
