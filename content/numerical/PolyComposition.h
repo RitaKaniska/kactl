@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description: Not in-struct. Given $p(x)$ and $g(x)$, calculate $p(g(x))$.
+ * Description: In-struct. Given $p(x)$ and $g(x)$, calculate $p(g(x))$.
  */
 
 #include "Polynomial.h"
