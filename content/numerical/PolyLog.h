@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: In-struct. Given $p(x)$, calculate $q(x)$ such that $q(x) = \ln(p(x)) (p(x) = e^{q(x)})$ 
  */
 
 #include "Polynomial.h"
