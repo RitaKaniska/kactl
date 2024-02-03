@@ -1,10 +1,11 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: Polynomial template
  */
 
 #include "NumberTheoreticTransform.h"
+#include "ModularArithmetic.h"
 
 struct poly {
   vector<mint> a;
