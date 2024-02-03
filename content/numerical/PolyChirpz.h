@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description: In-struct. Given $z, n$, calculate $P(1), P(z), P(z^2), ..., P(z^(n-1))$ in $O(n \log n)$.
+ * Description: Given $z, n$, calculate $P(1), P(z), P(z^2), ..., P(z^(n-1))$ in $O(n \log n)$.
  */
 
 #include "Polynomial.h"
