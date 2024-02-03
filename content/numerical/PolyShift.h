@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: Given $p(x)$ and an integer $a$. Calculate $p(x + a)$.
  */
 
 #include "Polynomial.h"
