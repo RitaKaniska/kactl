@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description: In-struct. Given $p(x)$ and $(x_0, \dots, x_{n-1})$, calculate $p(x_i)$.
+ * Description: Given $p(x)$ and $(x_0, \dots, x_{n-1})$, calculate $p(x_i)$.
  */
 
 #include "Polynomial.h"
