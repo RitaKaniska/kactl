@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: Given $p(x)$, calculate $q(x)$ such that, $q(x)^2 = p(x)$.
  */
 
 #include "Polynomial.h"
