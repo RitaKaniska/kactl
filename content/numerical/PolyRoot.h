@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: Given $p(x)$ and an integer $k$. Calculate $k-th$ root of $p(x)$.
  */
 
 #include "Polynomial.h"
