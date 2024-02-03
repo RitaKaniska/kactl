@@ -1,7 +1,7 @@
 /**
  * Author: ShahjalalShohag
  * Date: 2023-11-30
- * Description:
+ * Description: In-struct. Given $p(x)$ and $k$, calculate $q(x) = p(x)^k$.
  */
 
 #include "Polynomial.h"
