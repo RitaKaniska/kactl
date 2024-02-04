@@ -15,16 +15,11 @@ using namespace __gnu_cxx;
 
 typedef tree<int, null_type, less<int>, rb_tree_tag, tree_order_statistics_node_update> ordered_set;
 
-unsigned hash_f(unsigned x) {
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = ((x >> 16) ^ x) * 0x45d9f3b;
-    x = (x >> 16) ^ x;
-    return x;
-}
-struct chash {
-    int operator()(int x) const { return hash_f(x); }
+struct chash { // large odd number for C
+	const uint64_t C = ll(4e18 * acos(0)) | 71;
+	ll operator()(ll x) const { return __builtin_bswap64(x*C); }
 };
 
+__gnu_pbds::gp_hash_table<ll,int,chash> h({},{},{},{},{1<<16}); //hash map
 ordered_set s; //ordered_set
-gp_hash_table<int, int, chash> mp; //hash map
 rope <int> v; //rope (almost like string...)
