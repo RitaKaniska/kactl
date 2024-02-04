@@ -1,8 +1,9 @@
 /**
  * Author: DeMen100ns
  * Date: 2024-01-01
- * Description: - $order_of_key(k)$ : Number of items strictly smaller than k.
- * - $find_by_order(k)$ : K-th element in a set (counting from zero).
+ * Description: 
+ * - $order\_of\_key(k)$ : Number of items strictly smaller than k.
+ * - $find\_by\_order(k)$ : K-th element in a set (counting from zero).
  */
 
 #include <ext/pb_ds/assoc_container.hpp>
