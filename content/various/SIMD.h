@@ -1,6 +1,6 @@
 /**
- * Author: Simon Lindholm
- * Date: 2015-03-18
+ * Author: DeMen100ns
+ * Date: 2024-01-01
  * License: CC0
  * Source: https://software.intel.com/sites/landingpage/IntrinsicsGuide/
  * Description: Cheat sheet of SSE/AVX intrinsics, for doing arithmetic on several numbers at once.
@@ -10,48 +10,51 @@
  * If AVX is unsupported, try 128-bit operations, "emmintrin.h" and \#define \texttt{\_\_SSE\_\_} and \texttt{\_\_MMX\_\_} before including it.
  * For aligned memory use \texttt{\_mm\_malloc(size, 32)} or \texttt{int buf[N] alignas(32)}, but prefer loadu/storeu.
  */
-#pragma once
 
-#pragma GCC target ("avx2") // or sse4.1
-#include "immintrin.h" /** keep-include */
+#include <immintrin.h>
 
-typedef __m256i mi;
-#define L(x) _mm256_loadu_si256((mi*)&(x))
+#pragma GCC optimize("Ofast,unroll-loops")
+#pragma GCC target("avx2,bmi,bmi2,lzcnt,popcnt")
 
-// High-level/specific methods:
-// load(u)?_si256, store(u)?_si256, setzero_si256, _mm_malloc
-// blendv_(epi8|ps|pd) (z?y:x), movemask_epi8 (hibits of bytes)
-// i32gather_epi32(addr, x, 4): map addr[] over 32-b parts of x
-// sad_epu8: sum of absolute differences of u8, outputs 4xi64
-// maddubs_epi16: dot product of unsigned i7's, outputs 16xi15
-// madd_epi16: dot product of signed i16's, outputs 8xi32
-// extractf128_si256(, i) (256->128), cvtsi128_si32 (128->lo32)
-// permute2f128_si256(x,x,1) swaps 128-bit lanes
-// shuffle_epi32(x, 3*64+2*16+1*4+0) == x for each lane
-// shuffle_epi8(x, y) takes a vector instead of an imm
+void example(){
+    __m256i zero = _mm256_setzero_si256(); // set everything to 0
+    __m256i eight = _mm256_set1_epi32(8); // set the vector of 8 integers to be equal to 8
+    __m256i three = _mm256_set1_epi32(3);
+    
+    __m256i pi = _mm256_setr_epi32(3, 1, 4, 1, 5, 9, 2, 6); // NOTE: set and setr are opposites of each other
+    // mm_setr_epi32(3, 1, 4, 1, 5, 9, 2, 6) -> first value == 3, second value == 1, third value == 4, forth value == 1, ...
+    // mm_set_epi32(3, 1, 4, 1, 5, 9, 2, 6) -> first value == 6, second value == 2, third value == 9, forth value == 5, ...
 
-// Methods that work with most data types (append e.g. _epi32):
-// set1, blend (i8?x:y), add, adds (sat.), mullo, sub, and/or,
-// andnot, abs, min, max, sign(1,x), cmp(gt|eq), unpack(lo|hi)
+    int arr[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    __m256i a0 = _mm256_loadu_si256((__m256i*) &arr[0]); // [0, 1, 2, 3, 4, 5, 6, 7]
+    __m256i a4 = _mm256_loadu_si256((__m256i*) &arr[8]); // [8, 9, 10, 11, 12, 13, 14, 15]
 
-int sumi32(mi m) { union {int v[8]; mi m;} u; u.m = m;
-	int ret = 0; rep(i,0,8) ret += u.v[i]; return ret; }
-mi zero() { return _mm256_setzero_si256(); }
-mi one() { return _mm256_set1_epi32(-1); }
-bool all_zero(mi m) { return _mm256_testz_si256(m, m); }
-bool all_one(mi m) { return _mm256_testc_si256(m, one()); }
+    // _mm_insert_epi32(a, i, j) changes j-th number of a to value i
+    a0 = _mm256_insert_epi32(a0, 99, 1); // [0, 99, 2, 3, 4, 5, 6, 7]
 
-ll example_filteredDotProduct(int n, short* a, short* b) {
-	int i = 0; ll r = 0;
-	mi zero = _mm256_setzero_si256(), acc = zero;
-	while (i + 16 <= n) {
-		mi va = L(a[i]), vb = L(b[i]); i += 16;
-		va = _mm256_and_si256(_mm256_cmpgt_epi16(vb, va), va);
-		mi vp = _mm256_madd_epi16(va, vb);
-		acc = _mm256_add_epi64(_mm256_unpacklo_epi32(vp, zero),
-			_mm256_add_epi64(acc, _mm256_unpackhi_epi32(vp, zero)));
-	}
-	union {ll v[4]; mi m;} u; u.m = acc; rep(i,0,4) r += u.v[i];
-	for (;i<n;++i) if (a[i] < b[i]) r += a[i]*b[i]; // <- equiv
-	return r;
+    //also can use bitwise operator and/or/xor/notand
+    __m256i sm = _mm256_add_epi32(a0, a4); // [8, 108, 12, 14, 16, 18, 20, 22] (sum i-th element of a0 with i-th element of a4)
+    __m256i mx = _mm256_max_epi32(pi, a0); // [3, 99, 4, 3, 5, 9, 6, 7] (maximum of the i-th element of pi and i-th element of a0)
+    __m256i sb = _mm256_sub_epi32(a4, a0); // [8, -90, 8, 8, 8, 8, 8, 8] (subtract i-th element of a0 from i-th element of pi)
+
+    __m256i mul = _mm256_mullo_epi32(sm, mx); // [24, 10692, 48, 42, 80, 162, 120, 154] (multiply i-th element of sm with mx)
+    
+    // _mm_cmpgt_epi32(a, b) returns mask containing a greater than b
+    // note that 2^32-1 = -1 (all 32 bit is set)
+    __m256i mskg = _mm256_cmpgt_epi32(pi, three); // contains [0, 0, 2^32-1, 0, 2^32-1, 2^32-1, 0, 2^32-1]
+    // _mm_cmpeq_epi32(a, b) returns mask containing a equal to b
+    __m256i mske = _mm256_cmpeq_epi32(pi, three); // contains [2^32-1, 0, 0, 0, 0, 0, 0, 0]
+
+    // _mm256_blendv_epi8 (a, b, mask) //if mask[i] = 0 -> ans[i] = a[i], else ans[i] = b[i]
+    __m256i mix = _mm256_blendv_epi8(eight, pi, mskg); // contains [8, 8, 4, 8, 5, 9, 8, 6] (more details below)
+
+    //_mm256_permutevar8x32_epi32(a, msk) //reorder value of a to msk order.
+    // sm = [8, 108, 12, 14, 16, 18, 20, 22]
+    __m256i mask = _mm256_setr_epi32(3, 4, 5, 6, 7, 2, 1, 0);
+    __m256i newsm = _mm256_permutevar8x32_epi32(sm, mask); //[14, 16, 18, 20, 22, 12, 108, 8]
+    
+    int mxarr[8]; 
+    _mm256_storeu_si256((__m256i*) mxarr, mx); // stores values of mx into mxarr
+
+    int sm0 = _mm256_extract_epi32(sm, 2); // extract the 2-nd element of sum (= 18)
 }
