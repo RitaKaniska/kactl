@@ -6,7 +6,7 @@
  * Description: Pollard-rho randomized factorization algorithm. Returns prime
  * factors of a number, in arbitrary order (e.g. 2299 -> \{11, 19, 11\}).
  * Time: $O(n^{1/4})$, less for numbers with small factors.
- * Status: stress-tested
+ * Status: stress-tested, tested on Yosupo judge
  *
  * Details: This implementation uses the improvement described here
  * (https://en.wikipedia.org/wiki/Pollard%27s_rho_algorithm#Variants), where
@@ -43,8 +43,8 @@
 #include "MillerRabin.h"
 
 ull pollard(ull n) {
-	auto f = [n](ull x) { return modmul(x, x, n) + 1; };
 	ull x = 0, y = 0, t = 30, prd = 2, i = 1, q;
+	auto f = [&](ull x) { return modmul(x, x, n) + i; };
 	while (t++ % 40 || __gcd(prd, n) == 1) {
 		if (x == y) x = ++i, y = f(x);
 		if ((q = modmul(prd, max(x,y) - min(x,y), n))) prd = q;
