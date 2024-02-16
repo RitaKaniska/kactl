@@ -1,102 +1,196 @@
 /**
- * Author: Simon Lindholm
- * Date: 2016-07-25
- * Source: https://github.com/ngthanhtrung23/ACM_Notebook_new/blob/master/DataStructure/LinkCut.h
- * Description: Represents a forest of unrooted trees. You can add and remove
- * edges (as long as the result is still a forest), and check whether
- * two nodes are in the same tree.
+ * Author: Lamu
+ * Date: 2024-02-16
+ * Description: Link Cut Tree.
  * Time: All operations take amortized O(\log N).
- * Status: Stress-tested a bit for N <= 20
  */
-#pragma once
 
-struct Node { // Splay tree. Root's pp contains tree's parent.
-	Node *p = 0, *pp = 0, *c[2];
-	bool flip = 0;
-	Node() { c[0] = c[1] = 0; fix(); }
-	void fix() {
-		if (c[0]) c[0]->p = this;
-		if (c[1]) c[1]->p = this;
-		// (+ update sum of subtree elements etc. if wanted)
-	}
-	void pushFlip() {
-		if (!flip) return;
-		flip = 0; swap(c[0], c[1]);
-		if (c[0]) c[0]->flip ^= 1;
-		if (c[1]) c[1]->flip ^= 1;
-	}
-	int up() { return p ? p->c[1] == this : -1; }
-	void rot(int i, int b) {
-		int h = i ^ b;
-		Node *x = c[i], *y = b == 2 ? x : x->c[h], *z = b ? y : x;
-		if ((y->p = p)) p->c[up()] = y;
-		c[i] = z->c[i ^ 1];
-		if (b < 2) {
-			x->c[h] = y->c[h ^ 1];
-			z->c[h ^ 1] = b ? x : this;
-		}
-		y->c[i ^ 1] = b ? this : x;
-		fix(); x->fix(); y->fix();
-		if (p) p->fix();
-		swap(pp, y->pp);
-	}
-	void splay() { /// Splay this up to the root. Always finishes without flip set.
-		for (pushFlip(); p; ) {
-			if (p->p) p->p->pushFlip();
-			p->pushFlip(); pushFlip();
-			int c1 = up(), c2 = p->up();
-			if (c2 == -1) p->rot(c1, 2);
-			else p->p->rot(c2, c1 != c2);
-		}
-	}
-	Node* first() { /// Return the min element of the subtree rooted at this, splayed to the top.
-		pushFlip();
-		return c[0] ? c[0]->first() : (splay(), this);
-	}
+using Data = array<int, 2>;
+
+Data mergeData(Data a, Data b) {
+  int x = 1LL * b[0] * a[0] % MOD;
+  int y = (1LL * b[0] * a[1] + b[1]) % MOD;
+  return {x, y};
+}
+
+#define SPLAY_NODE_INJECTION \
+  Data val, d, drev;         \
+  void recalc();             \
+  void pushdown();
+
+#define LINK_CUT /// exclude-line
+struct Node {
+  int cnt, flip; Node *p, *pp, *c[2]; // pp for LCT
+  Node() {
+    p = pp = c[0] = c[1] = 0; flip = 0; cnt = 1;
+  }
+  int side() const { return p->c[1] == this; }
+#ifdef SPLAY_NODE_INJECTION /// exclude-line
+  SPLAY_NODE_INJECTION /// exclude-line
+#else /// exclude-line
+  void recalc() {
+    // recalc segment value and REVERSE VALUE (for LCT)
+    cnt = 1;
+    if (c[0]) {
+      c[0]->pushdown(); cnt += c[0]->cnt;
+    }
+    if (c[1]) {
+      c[1]->pushdown(); cnt += c[1]->cnt;
+    }
+  }
+  void pushdown() {
+    // lazy propagation. remove below if use splay only
+    if (!flip) return;
+    flip = 0, swap(c[0], c[1]);
+    if (c[0]) c[0]->flip ^= 1;
+    if (c[1]) c[1]->flip ^= 1;
+  }
+#endif /// exclude-line
+  void attach(Node* x, int side) {
+    assert(!flip); if (x) x->p = this;
+    c[side] = x; this->recalc();
+  }
+  void rotate() {
+#ifdef LINK_CUT /// exclude-line
+    if (p->p) p->p->pushdown(); // LCT only
+    p->pushdown(), pushdown();  // LCT only
+#endif /// exclude-line
+    Node* par = p; int s = side();
+    if (par->p) par->p->attach(this, par->side());
+    else p = nullptr;
+    par->attach(c[s ^ 1], s); attach(par, s ^ 1);
+#ifdef LINK_CUT /// exclude-line
+    swap(this->pp, par->pp); // LCT only
+#endif /// exclude-line
+  }
+  void splay() {
+    for (pushdown(); p; rotate()) {
+#ifdef LINK_CUT /// exclude-line
+      if (p->p) p->p->pushdown(); // LCT only
+      p->pushdown(), pushdown();  // LCT only
+#endif /// exclude-line
+      if (p->p) (side() == p->side() ? p : this)->rotate();
+    }
+  }
+  array<Node*, 2> split(int k) {
+    if (k == 0) return {0, this};
+    Node *cur = find(k), *r = cur->c[1];
+    if (r) r->p = 0;
+    cur->c[1] = 0; cur->recalc(); return {cur, r};
+  }
+  Node* find(int k) { // find k-th, splay to root
+    assert(0 <= k && k <= cnt);
+    Node* cur = this; while (1) {
+      cur->pushdown();
+      int sz = (cur->c[0] ? cur->c[0]->cnt : 0);
+      if (k <= sz) cur = cur->c[0];
+      else if (k > sz + 1) k -= sz + 1, cur = cur->c[1];
+      else return cur->splay(), cur;
+    }
+  }
+  Node* merge(Node* r) {
+    Node* tmp = split(cnt)[0];
+    return tmp->attach(r, 1), tmp;
+  }
 };
 
-struct LinkCut {
-	vector<Node> node;
-	LinkCut(int N) : node(N) {}
+struct LinkCutTree {
+  vector<Node> a;
+  LinkCutTree(int n) : a(n) {}
+  int id(Node *u) {
+    return int(!u ? -1 : u - &a[0]);
+  }
+  void detach(Node *node) {
+    if (node->c[1]) {
+      swap(node->c[1]->pp, node->c[1]->p);
+      node->c[1] = 0;
+    }
+  }
+  int access(int u) {
+    Node *node = &a[u], *par = node;
+    node->splay(); detach(node);
+    while (node->pp) {
+      par = node->pp; par->splay();
+      detach(par); par->attach(node, 1);
+      node->pp = 0; node->splay();
+    }
+    return id(par);
+  }
+  void link(int p, int u) {
+    access(u); a[u].pp = &a[p]; access(u);
+  }
+  void cut(int u) {
+    access(u); assert(a[u].c[0]);
+    a[u].c[0] = a[u].c[0]->p = 0;
+    a[u].recalc();
+  }
+  int getRoot(int u) {
+    access(u); return id(a[u].find(1));
+  }
+  bool sameTree(int u, int v) {
+    return getRoot(u) == getRoot(v);
+  }
+  int lca(int u, int v) {
+    if (!sameTree(u, v)) return -1;
+    return access(u), access(v);
+  }
+  void makeRoot(int u) {
+    access(u);
+    if (a[u].c[0]) {
+      a[u].c[0]->pp = &a[u];
+      a[u].c[0]->flip ^= 1;
+      a[u].c[0] = a[u].c[0]->p = 0;
+      a[u].recalc();
+    }
+  }
+  Node getPath(int u, int v) {
+    assert(sameTree(u, v));
+    makeRoot(u); access(v); return a[v];
+  }
+  void addEdge(int u, int v) {
+    assert(!sameTree(u, v));
+    makeRoot(v); link(u, v);
+  }
+  void remEdge(int u, int v) {
+    assert(sameTree(u, v));
+    makeRoot(u); access(v);
+    assert(id(a[v].c[0]) == u);
+    cut(v);
+  }
+};
 
-	void link(int u, int v) { // add an edge (u, v)
-		assert(!connected(u, v));
-		makeRoot(&node[u]);
-		node[u].pp = &node[v];
-	}
-	void cut(int u, int v) { // remove an edge (u, v)
-		Node *x = &node[u], *top = &node[v];
-		makeRoot(top); x->splay();
-		assert(top == (x->pp ?: x->c[0]));
-		if (x->pp) x->pp = 0;
-		else {
-			x->c[0] = top->p = 0;
-			x->fix();
-		}
-	}
-	bool connected(int u, int v) { // are u, v in the same tree?
-		Node* nu = access(&node[u])->first();
-		return nu == access(&node[v])->first();
-	}
-	void makeRoot(Node* u) { /// Move u to root of represented tree.
-		access(u);
-		u->splay();
-		if(u->c[0]) {
-			u->c[0]->p = 0;
-			u->c[0]->flip ^= 1;
-			u->c[0]->pp = u;
-			u->c[0] = 0;
-			u->fix();
-		}
-	}
-	Node* access(Node* u) { /// Move u to root aux tree. Return the root of the root aux tree.
-		u->splay();
-		while (Node* pp = u->pp) {
-			pp->splay(); u->pp = 0;
-			if (pp->c[1]) {
-				pp->c[1]->p = 0; pp->c[1]->pp = pp; }
-			pp->c[1] = u; pp->fix(); u = pp;
-		}
-		return u;
-	}
+#undef SPLAY_NODE_INJECTION
+
+void Node::recalc() {
+  cnt = 1;
+  d = drev = val;
+  if (c[0]) {
+    c[0]->pushdown();
+    cnt += c[0]->cnt;
+    d = mergeData(c[0]->d, d);
+    drev = mergeData(drev, c[0]->drev);
+  }
+  if (c[1]) {
+    c[1]->pushdown();
+    cnt += c[1]->cnt;
+    d = mergeData(d, c[1]->d);
+    drev = mergeData(c[1]->drev, drev);
+  }
+}
+
+void Node::pushdown() {
+  if (!flip) return;
+  flip = 0, swap(c[0], c[1]);
+  if (c[0]) c[0]->flip ^= 1;
+  if (c[1]) c[1]->flip ^= 1;
+  swap(d, drev);
+}
+
+struct LCT : LinkCutTree {
+  using LinkCutTree::LinkCutTree;
+  void update(int u, Data d) {
+    access(u);
+    a[u].val = d;
+    a[u].recalc();
+  }
 };
