@@ -1,7 +1,7 @@
 /**
  * Author: Lamu
  * Date: 2024-02-16
- * Description: Build dominator tree with source S
+ * Description: Build dominator tree with source S. Everypath from s to u always go through parent vertice.
  */
 
 vector <int> adj[maxn],radj[maxn],tree[maxn],bucket[maxn];
