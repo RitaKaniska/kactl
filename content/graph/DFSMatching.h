@@ -4,16 +4,16 @@
  * Description: DeMen-Kuhn (Kuhn with Russian optimize)
  * Time: O(VE) but very fast in practice
  */
-#pragma once
 
 vector <int> a[N];
-int mr[N], cttme;
+int f[N], ctf = 0;
+int n, m, mr[N];
 bool ml[N];
-char f[N];
 
 bool dfs(int u){
-    if (f[u] == cttme) return false;
-    f[u] = cttme;
+    if (f[u] == ctf) return false;
+    f[u] = ctf;
+    shuffle(a[u].begin(), a[u].end(), rng);
     for(int i : a[u]){
         if (!mr[i] || dfs(mr[i])){
             mr[i] = u;
@@ -26,13 +26,12 @@ bool dfs(int u){
 int maximum_matching(){
     int cnt = 0;
     for(bool run = true; run;){
-        cttme++;
-        run = false;
+        run = false; ++ctf;
         for(int i = 1; i <= n; ++i){
-            if (ml[i]) continue;
-            if (dfs(i)){
-                ml[i] = run = true;
+            if (!ml[i] && dfs(i)){
+                run = true;
                 ++cnt;
+                ml[i] = true;
             }
         }
     }
