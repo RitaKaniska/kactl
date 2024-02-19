@@ -18,16 +18,16 @@ Data mergeData(Data a, Data b) {
   void recalc();             \
   void pushdown();
 
-#define LINK_CUT /// exclude-line
+#define LINK_CUT 
 struct Node {
   int cnt, flip; Node *p, *pp, *c[2]; // pp for LCT
   Node() {
     p = pp = c[0] = c[1] = 0; flip = 0; cnt = 1;
   }
   int side() const { return p->c[1] == this; }
-#ifdef SPLAY_NODE_INJECTION /// exclude-line
-  SPLAY_NODE_INJECTION /// exclude-line
-#else /// exclude-line
+#ifdef SPLAY_NODE_INJECTION 
+  SPLAY_NODE_INJECTION 
+#else 
   void recalc() {
     // recalc segment value and REVERSE VALUE (for LCT)
     cnt = 1;
@@ -45,30 +45,30 @@ struct Node {
     if (c[0]) c[0]->flip ^= 1;
     if (c[1]) c[1]->flip ^= 1;
   }
-#endif /// exclude-line
+#endif 
   void attach(Node* x, int side) {
     assert(!flip); if (x) x->p = this;
     c[side] = x; this->recalc();
   }
   void rotate() {
-#ifdef LINK_CUT /// exclude-line
+#ifdef LINK_CUT 
     if (p->p) p->p->pushdown(); // LCT only
     p->pushdown(), pushdown();  // LCT only
-#endif /// exclude-line
+#endif 
     Node* par = p; int s = side();
     if (par->p) par->p->attach(this, par->side());
     else p = nullptr;
     par->attach(c[s ^ 1], s); attach(par, s ^ 1);
-#ifdef LINK_CUT /// exclude-line
+#ifdef LINK_CUT 
     swap(this->pp, par->pp); // LCT only
-#endif /// exclude-line
+#endif
   }
   void splay() {
     for (pushdown(); p; rotate()) {
-#ifdef LINK_CUT /// exclude-line
+#ifdef LINK_CUT
       if (p->p) p->p->pushdown(); // LCT only
       p->pushdown(), pushdown();  // LCT only
-#endif /// exclude-line
+#endif
       if (p->p) (side() == p->side() ? p : this)->rotate();
     }
   }
